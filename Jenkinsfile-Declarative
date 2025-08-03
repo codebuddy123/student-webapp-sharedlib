@@ -38,7 +38,7 @@ pipeline {
                 script {
                     sendStartSlackNotification()  // Shared Library Function call inside script block
                 }
-                sh 'mvn clean package'  // Use Maven for building the package
+                sh 'mvns clean package'  // Use Maven for building the package
             }
         }
 
