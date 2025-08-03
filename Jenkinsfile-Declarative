@@ -25,7 +25,10 @@ pipeline {
 
         stage('Set Build Metadata') {
             steps {
-               setBuildMetadata()  // Shared Library Function call inside script block
+               script {
+                  setBuildMetadata()  // Shared Library Function call inside script block
+               }
+               
                
             }
         }
