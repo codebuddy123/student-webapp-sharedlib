@@ -38,7 +38,7 @@ pipeline {
                 script {
                     sendStartSlackNotification()  // Shared Library Function call inside script block
                 }
-                sh 'mvns clean package'  // Use Maven for building the package
+                sh 'mvn clean package'  // Use Maven for building the package
             }
         }
 
@@ -61,8 +61,9 @@ pipeline {
         }
         failure {
             script {
-                sendFailureSlackNotification()  // Shared Library Function call inside script block
-                sendFailureEmail()  // Shared Library Function call inside script block
+                sendFailureEmail()  // Shared Library Function call 
+                sendFailureSlackNotification()  // Shared Library Function call 
+                
             }
         }
         always {
