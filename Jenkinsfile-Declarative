@@ -1,0 +1,67 @@
+@Library: ashishtech-shared-lib_ // Import the shared library for common functions
+pipeline {
+    agent any
+
+    environment{
+        TOMCAT_URL = '172.31.38.104'
+        TOMCAT_USER = 'ec2-user'
+    }
+    triggers {
+        githubPush() // Trigger the pipeline on GitHub push events
+    }
+    
+    tools {
+        maven 'maven-3.9.10' // Specify the Maven version
+       
+    }
+    stages {
+        stage('Git Checkout') {
+            steps {
+                git branch: 'main', credentialsId: 'ce4402e7-050c-46c0-b476-9b9e33e8db44', url: 'https://github.com/codebuddy123/student-webapp-sharedlib.git'
+            }
+        }
+
+        stage('Set Build Metadata') {
+            steps {
+              setBuildMetadata() // Set build metadata using the shared library function
+        }
+    }
+}
+        stage('Build the Package') {
+            steps {
+                sendStartSlackNotification() // Send Slack notification when build starts
+                sh 'mvn clean package' //  Use Maven for building the package
+            }
+        }
+
+        // Stage to upload the artifact to Tomcat server
+        stage('Upload Artifact to Tomcat Server') {
+            steps {
+                sshagent(['tomcat-server']) {
+                    sh "rm -f /opt/tomcat/webapps/student-reg-webapp.war" // Remove existing WAR file if it exists
+                    sh "scp -o StrictHostKeyChecking=no target/student-reg-webapp.war ${TOMCAT_USER}@${TOMCAT_URL}:/opt/tomcat/webapps/"
+                    
+                }
+                
+            }
+        }
+    }
+
+    post {
+        success {
+            sendSuccessEmail()  // Calling Shared Library Function
+            sendSuccessSlackNotification() // Calling Shared Library Function
+            
+        }
+        failure {
+            sendFailureSlackNotification() // Calling Shared Library Function
+            sendFailureEmail() // Calling Shared Library Function
+            
+        }
+        always {
+            // Clean up workspace after build
+            cleanWs()
+        }
+    }
+}
+// End of Jenkinsfile Declarative Pipeline
