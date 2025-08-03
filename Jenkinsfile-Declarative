@@ -1,4 +1,4 @@
-@Library: ashishtech-shared-lib_ // Import the shared library for common functions
+@Library('ashishtech-sharedlib') _ // Import the shared library for common functions
 pipeline {
     agent any
 
