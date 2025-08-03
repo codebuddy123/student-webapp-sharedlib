@@ -1,19 +1,21 @@
-@Library('ashishtech-sharedlib') _ // Import the shared library for common functions
+@Library('ashishtech-sharedlib') _  // Import the shared library for common functions
+
 pipeline {
     agent any
 
-    environment{
+    environment {
         TOMCAT_URL = '172.31.38.104'
         TOMCAT_USER = 'ec2-user'
     }
+
     triggers {
-        githubPush() // Trigger the pipeline on GitHub push events
+        githubPush()  // Trigger the pipeline on GitHub push events
     }
-    
+
     tools {
-        maven 'maven-3.9.10' // Specify the Maven version
-       
+        maven 'maven-3.9.10'  // Specify the Maven version
     }
+
     stages {
         stage('Git Checkout') {
             steps {
@@ -23,45 +25,46 @@ pipeline {
 
         stage('Set Build Metadata') {
             steps {
-              setBuildMetadata() // Set build metadata using the shared library function
-        }
-    }
-}
-        stage('Build the Package') {
-            steps {
-                sendStartSlackNotification() // Send Slack notification when build starts
-                sh 'mvn clean package' //  Use Maven for building the package
+                script {
+                    setBuildMetadata()  // Shared Library Function call inside script block
+                }
             }
         }
 
-        // Stage to upload the artifact to Tomcat server
+        stage('Build the Package') {
+            steps {
+                script {
+                    sendStartSlackNotification()  // Shared Library Function call inside script block
+                }
+                sh 'mvn clean package'  // Use Maven for building the package
+            }
+        }
+
         stage('Upload Artifact to Tomcat Server') {
             steps {
                 sshagent(['tomcat-server']) {
-                    sh "rm -f /opt/tomcat/webapps/student-reg-webapp.war" // Remove existing WAR file if it exists
+                    sh "rm -f /opt/tomcat/webapps/student-reg-webapp.war"  // Remove existing WAR file if it exists
                     sh "scp -o StrictHostKeyChecking=no target/student-reg-webapp.war ${TOMCAT_USER}@${TOMCAT_URL}:/opt/tomcat/webapps/"
-                    
                 }
-                
             }
         }
     }
 
     post {
         success {
-            sendSuccessEmail()  // Calling Shared Library Function
-            sendSuccessSlackNotification() // Calling Shared Library Function
-            
+            script {
+                sendSuccessEmail()  // Shared Library Function call inside script block
+                sendSuccessSlackNotification()  // Shared Library Function call inside script block
+            }
         }
         failure {
-            sendFailureSlackNotification() // Calling Shared Library Function
-            sendFailureEmail() // Calling Shared Library Function
-            
+            script {
+                sendFailureSlackNotification()  // Shared Library Function call inside script block
+                sendFailureEmail()  // Shared Library Function call inside script block
+            }
         }
         always {
-            // Clean up workspace after build
-            cleanWs()
+            cleanWs()  // Clean up workspace after build
         }
     }
 }
-// End of Jenkinsfile Declarative Pipeline
